@@ -13,9 +13,11 @@ import {
   Flame,
   Trophy,
   Compass,
+  LogOut,
 } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { motion } from 'framer-motion'
+import { useSession, signOut } from 'next-auth/react'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -33,6 +35,9 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname()
+  const { data: session } = useSession()
+  const userName = session?.user?.name || 'Learner'
+  const userInitial = userName.charAt(0).toUpperCase()
 
   return (
     <div className="min-h-screen bg-background grid-pattern">
@@ -67,7 +72,7 @@ export function AppShell({ children }: AppShellProps) {
               className="inline-flex items-center gap-1.5 rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-sm font-semibold text-orange-400"
             >
               <Flame className="h-4 w-4" />
-              <span>7</span>
+              <span>{session ? '🔥' : '0'}</span>
             </motion.span>
 
             <motion.span
@@ -75,14 +80,18 @@ export function AppShell({ children }: AppShellProps) {
               className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-sm font-semibold text-amber-400"
             >
               <Trophy className="h-4 w-4" />
-              <span>1,240 XP</span>
+              <span>XP</span>
             </motion.span>
 
             <ThemeToggle />
 
-            <div className="hidden h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-sm font-bold text-black md:flex">
-              A
-            </div>
+            <button
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              className="hidden h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-sm font-bold text-black md:flex"
+              title={`Sign out (${userName})`}
+            >
+              {userInitial}
+            </button>
           </div>
         </div>
       </header>

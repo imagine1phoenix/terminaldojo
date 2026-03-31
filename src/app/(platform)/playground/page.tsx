@@ -1,22 +1,67 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
 import { RotateCcw, ChevronDown, Bot, History, Maximize2 } from 'lucide-react'
 
-const environments = ['Ubuntu 22.04', 'Alpine Linux', 'macOS Sonoma', 'Debian 12']
+const TerminalEmulator = dynamic(
+  () => import('@/components/terminal/terminal-emulator').then((m) => m.TerminalEmulator),
+  { ssr: false, loading: () => <div className="flex h-[400px] items-center justify-center bg-[#0a0e14] rounded-2xl text-zinc-500 font-mono text-sm">Loading terminal...</div> }
+)
 
-const sampleHistory = [
-  'ls -la',
-  'cd /var/log',
-  "grep -rn 'error' .",
-  'du -sh *',
-  'find . -name "*.log" -size +1M',
-]
+const environments = ['Ubuntu 22.04', 'Alpine Linux', 'macOS Sonoma', 'Debian 12']
 
 export default function PlaygroundPage() {
   const [env, setEnv] = useState(environments[0])
   const [showEnvDropdown, setShowEnvDropdown] = useState(false)
+  const [commandHistory, setCommandHistory] = useState<string[]>([])
+  const [aiQuery, setAiQuery] = useState('')
+  const [aiResponse, setAiResponse] = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
+
+  const handleCommand = useCallback((cmd: string) => {
+    setCommandHistory((prev) => [cmd, ...prev].slice(0, 20))
+  }, [])
+
+  const askAI = async (): Promise<void> => {
+    if (!aiQuery.trim() || aiLoading) return
+    setAiLoading(true)
+    setAiResponse('')
+
+    try {
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content: aiQuery }],
+        }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        setAiResponse(data.error || 'AI unavailable')
+        setAiLoading(false)
+        return
+      }
+
+      const reader = res.body?.getReader()
+      const decoder = new TextDecoder()
+      let text = ''
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          text += decoder.decode(value, { stream: true })
+          setAiResponse(text)
+        }
+      }
+    } catch {
+      setAiResponse('Failed to connect to AI')
+    }
+    setAiLoading(false)
+  }
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }} className="space-y-6">
@@ -27,82 +72,53 @@ export default function PlaygroundPage() {
           Terminal <span className="text-gradient-primary">Playground</span>
         </h1>
         <p className="relative mt-2 text-foreground-muted">
-          Practice commands freely in a sandboxed environment. No consequences, full power.
+          Practice commands freely in a sandboxed environment. Real execution, safe environment.
         </p>
       </section>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
         {/* Main terminal */}
-        <div className="terminal-shell flex flex-col" style={{ minHeight: 560 }}>
+        <div className="overflow-hidden rounded-2xl border border-border bg-[#0a0e14]">
           <div className="flex items-center justify-between border-b border-white/5 px-4 py-2.5">
-            <div className="flex items-center gap-3">
-              {/* Environment selector */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowEnvDropdown(!showEnvDropdown)}
-                  className="flex items-center gap-1.5 rounded border border-zinc-700 px-2.5 py-1 font-mono text-xs text-zinc-400 hover:text-zinc-300 transition-colors"
+            <div className="relative">
+              <button
+                onClick={() => setShowEnvDropdown(!showEnvDropdown)}
+                className="flex items-center gap-1.5 rounded border border-zinc-700 px-2.5 py-1 font-mono text-xs text-zinc-400 hover:text-zinc-300 transition-colors"
+              >
+                {env} <ChevronDown className="h-3 w-3" />
+              </button>
+              {showEnvDropdown && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="absolute left-0 top-full z-10 mt-1 w-44 rounded-lg border border-zinc-700 bg-zinc-900 py-1 shadow-xl"
                 >
-                  {env} <ChevronDown className="h-3 w-3" />
-                </button>
-                {showEnvDropdown && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute left-0 top-full z-10 mt-1 w-44 rounded-lg border border-zinc-700 bg-zinc-900 py-1 shadow-xl"
-                  >
-                    {environments.map((e) => (
-                      <button
-                        key={e}
-                        onClick={() => { setEnv(e); setShowEnvDropdown(false) }}
-                        className={`w-full px-3 py-1.5 text-left font-mono text-xs transition-colors hover:bg-zinc-800 ${e === env ? 'text-primary' : 'text-zinc-400'}`}
-                      >
-                        {e}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </div>
+                  {environments.map((e) => (
+                    <button
+                      key={e}
+                      onClick={() => { setEnv(e); setShowEnvDropdown(false) }}
+                      className={`w-full px-3 py-1.5 text-left font-mono text-xs transition-colors hover:bg-zinc-800 ${e === env ? 'text-primary' : 'text-zinc-400'}`}
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
             </div>
             <div className="flex gap-2">
               <button className="flex items-center gap-1 rounded border border-zinc-700 px-2 py-1 text-xs text-zinc-400 hover:text-zinc-300 transition-colors">
                 <Maximize2 className="h-3 w-3" />
               </button>
-              <button className="flex items-center gap-1 rounded border border-zinc-700 px-2 py-1 text-xs text-zinc-400 hover:text-zinc-300 transition-colors">
+              <button
+                onClick={() => window.location.reload()}
+                className="flex items-center gap-1 rounded border border-zinc-700 px-2 py-1 text-xs text-zinc-400 hover:text-zinc-300 transition-colors"
+              >
                 <RotateCcw className="h-3 w-3" /> Reset
               </button>
             </div>
           </div>
-
-          <div className="flex-1 px-5 py-4 font-mono text-sm text-terminal-text">
-            <p className="text-zinc-500">Welcome to TerminalDojo Playground</p>
-            <p className="text-zinc-500">Environment: {env}</p>
-            <p className="text-zinc-500">Type any command to practice. Use &apos;help&apos; for tips.</p>
-            <p className="mt-2 text-zinc-600">─────────────────────────────────────</p>
-            <p className="mt-2">
-              <span className="text-terminal-prompt">learner@dojo</span>
-              <span className="text-zinc-500">:</span>
-              <span className="text-blue-400">~</span>
-              <span className="text-zinc-500">$ </span>
-              <span>ls -la</span>
-            </p>
-            <p className="text-zinc-400">total 32</p>
-            <p className="text-zinc-400">drwxr-xr-x  5 learner learner 4096 Mar 31 docs/</p>
-            <p className="text-zinc-400">-rw-r--r--  1 learner learner 1420 Mar 31 notes.txt</p>
-            <p className="text-zinc-400">-rwxr-xr-x  1 learner learner  856 Mar 30 deploy.sh</p>
-            <p className="text-zinc-400">drwxr-xr-x  3 learner learner 4096 Mar 29 projects/</p>
-            <p className="mt-2">
-              <span className="text-terminal-prompt">learner@dojo</span>
-              <span className="text-zinc-500">:</span>
-              <span className="text-blue-400">~</span>
-              <span className="text-zinc-500">$ </span>
-              <span className="terminal-cursor">▋</span>
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between border-t border-white/5 px-4 py-1.5 text-[10px] text-zinc-600">
-            <span>bash 5.2</span>
-            <span>playground-session</span>
-            <span>{env.toLowerCase().replace(/\s+/g, '-')}</span>
+          <div style={{ height: 440 }}>
+            <TerminalEmulator onCommand={handleCommand} sessionId="playground" />
           </div>
         </div>
 
@@ -114,11 +130,15 @@ export default function PlaygroundPage() {
               <History className="h-4 w-4 text-foreground-subtle" /> Command History
             </h3>
             <div className="mt-3 space-y-1">
-              {sampleHistory.map((cmd, i) => (
-                <button key={i} className="w-full rounded-lg px-2.5 py-1.5 text-left font-mono text-xs text-foreground-muted transition-colors hover:bg-background-tertiary/50 hover:text-foreground">
-                  $ {cmd}
-                </button>
-              ))}
+              {commandHistory.length === 0 ? (
+                <p className="text-xs text-foreground-subtle">No commands yet. Start typing!</p>
+              ) : (
+                commandHistory.map((cmd, i) => (
+                  <div key={i} className="rounded-lg px-2.5 py-1.5 font-mono text-xs text-foreground-muted">
+                    $ {cmd}
+                  </div>
+                ))
+              )}
             </div>
           </section>
 
@@ -128,16 +148,27 @@ export default function PlaygroundPage() {
               <Bot className="h-4 w-4 text-purple-400" /> AI Assistant
             </h3>
             <p className="mt-2 text-xs text-foreground-muted">
-              Ask a question about any command or get suggestions.
+              Ask a question about any command.
             </p>
             <textarea
+              value={aiQuery}
+              onChange={(e) => setAiQuery(e.target.value)}
               placeholder="How do I find files changed in the last 24 hours?"
               className="mt-3 w-full rounded-lg border border-border bg-background px-3 py-2 font-mono text-xs outline-none transition-all focus:border-primary/40 focus:ring-2 focus:ring-primary/20"
               rows={3}
             />
-            <button className="mt-2 w-full rounded-lg bg-purple-500/20 py-2 text-xs font-semibold text-purple-400 transition-colors hover:bg-purple-500/30">
-              Ask AI
+            <button
+              onClick={askAI}
+              disabled={aiLoading}
+              className="mt-2 w-full rounded-lg bg-purple-500/20 py-2 text-xs font-semibold text-purple-400 transition-colors hover:bg-purple-500/30 disabled:opacity-50"
+            >
+              {aiLoading ? 'Thinking...' : 'Ask AI'}
             </button>
+            {aiResponse && (
+              <div className="mt-3 rounded-lg border border-border bg-background-secondary p-3 text-xs text-foreground-muted whitespace-pre-wrap max-h-48 overflow-y-auto">
+                {aiResponse}
+              </div>
+            )}
           </section>
         </div>
       </div>
