@@ -15,15 +15,15 @@ Help learners go from beginner to advanced CLI fluency using structured lessons,
 ## Project Status
 Planning and specification phase.
 
-Core planning docs are in the `terminaldojo` folder.
+Core planning docs are in the `docs` folder.
 
 ## Documentation Index
-- Project overview: [terminaldojo/project-overview.md](terminaldojo/project-overview.md)
-- Learning engine: [terminaldojo/learning-engine.md](terminaldojo/learning-engine.md)
-- Architecture overview: [terminaldojo/architecture-overview.md](terminaldojo/architecture-overview.md)
-- Database schema: [terminaldojo/database-schema.md](terminaldojo/database-schema.md)
-- Pages and routes: [terminaldojo/pages-and-routes.md](terminaldojo/pages-and-routes.md)
-- Project rules and conventions: [terminaldojo/terminaldojo.md](terminaldojo/terminaldojo.md)
+- Project overview: [docs/project-overview.md](docs/project-overview.md)
+- Learning engine: [docs/learning-engine.md](docs/learning-engine.md)
+- Architecture overview: [docs/architecture-overview.md](docs/architecture-overview.md)
+- Database schema: [docs/database-schema.md](docs/database-schema.md)
+- Pages and routes: [docs/pages-and-routes.md](docs/pages-and-routes.md)
+- Project rules and conventions: [docs/terminaldojo.md](docs/terminaldojo.md)
 
 ## Planned Stack
 - Frontend: Next.js App Router, TypeScript, Tailwind, shadcn/ui
