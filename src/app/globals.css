@@ -1,0 +1,484 @@
+@import "tailwindcss";
+
+/* ========================================
+   TERMINALDOJO — DESIGN TOKEN SYSTEM
+   ======================================== */
+
+:root {
+  /* Backgrounds */
+  --background: #050505;
+  --background-secondary: #0e0e12;
+  --background-tertiary: #1a1a24;
+  --background-glass: rgba(14, 14, 18, 0.65);
+  --background-glass-hover: rgba(26, 26, 36, 0.75);
+
+  /* Foreground */
+  --foreground: #f0f0f5;
+  --foreground-muted: #9ca3af;
+  --foreground-subtle: #6b7280;
+
+  /* Primary — Emerald */
+  --primary: #10b981;
+  --primary-hover: #34d399;
+  --primary-dark: #065f46;
+  --primary-glow: rgba(16, 185, 129, 0.2);
+  --primary-glow-strong: rgba(16, 185, 129, 0.4);
+
+  /* Accent — Cyan */
+  --accent: #06b6d4;
+  --accent-glow: rgba(6, 182, 212, 0.2);
+
+  /* Semantic */
+  --secondary: #8b5cf6;
+  --danger: #ef4444;
+  --danger-glow: rgba(239, 68, 68, 0.2);
+  --warning: #f59e0b;
+  --warning-glow: rgba(245, 158, 11, 0.2);
+  --success: #22c55e;
+  --info: #06b6d4;
+
+  /* Gamification */
+  --xp-gold: #fbbf24;
+  --xp-gold-glow: rgba(251, 191, 36, 0.25);
+  --streak-orange: #f97316;
+  --streak-glow: rgba(249, 115, 22, 0.25);
+  --badge-purple: #a855f7;
+  --badge-glow: rgba(168, 85, 247, 0.25);
+
+  /* Terminal */
+  --terminal-bg: #0a0a0a;
+  --terminal-text: #4ade80;
+  --terminal-prompt: #22d3ee;
+  --terminal-cursor: #fbbf24;
+  --terminal-selection: rgba(74, 222, 128, 0.15);
+  --terminal-border: rgba(63, 63, 70, 0.6);
+
+  /* Borders */
+  --border: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.12);
+  --border-glow: rgba(16, 185, 129, 0.3);
+  --ring: #10b981;
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #10b981, #06b6d4);
+  --gradient-purple: linear-gradient(135deg, #8b5cf6, #ec4899);
+  --gradient-gold: linear-gradient(135deg, #fbbf24, #f97316);
+  --gradient-danger: linear-gradient(135deg, #ef4444, #f97316);
+  --gradient-hero: radial-gradient(ellipse 80% 70% at 50% -20%, rgba(16, 185, 129, 0.15), transparent),
+                    radial-gradient(ellipse 60% 60% at 80% 50%, rgba(6, 182, 212, 0.08), transparent),
+                    radial-gradient(ellipse 60% 50% at 20% 80%, rgba(139, 92, 246, 0.06), transparent);
+  --gradient-card: linear-gradient(145deg, rgba(14, 14, 18, 0.8) 0%, rgba(26, 26, 36, 0.4) 100%);
+  --gradient-border: linear-gradient(135deg, rgba(16, 185, 129, 0.5), rgba(6, 182, 212, 0.5), rgba(139, 92, 246, 0.5));
+
+  /* Shadows */
+  --shadow-glow-sm: 0 0 15px rgba(16, 185, 129, 0.1);
+  --shadow-glow-md: 0 0 30px rgba(16, 185, 129, 0.15);
+  --shadow-glow-lg: 0 0 60px rgba(16, 185, 129, 0.2);
+  --shadow-card: 0 4px 32px rgba(0, 0, 0, 0.4);
+  --shadow-card-hover: 0 8px 48px rgba(0, 0, 0, 0.5), 0 0 20px rgba(16, 185, 129, 0.08);
+
+  /* Spacing */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+}
+
+/* ========================================
+   TAILWIND v4 THEME TOKENS
+   ======================================== */
+@theme inline {
+  --color-background: var(--background);
+  --color-background-secondary: var(--background-secondary);
+  --color-background-tertiary: var(--background-tertiary);
+  --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-foreground-subtle: var(--foreground-subtle);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-dark: var(--primary-dark);
+  --color-accent: var(--accent);
+  --color-secondary: var(--secondary);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --color-info: var(--info);
+  --color-xp-gold: var(--xp-gold);
+  --color-streak-orange: var(--streak-orange);
+  --color-border: var(--border);
+  --color-border-hover: var(--border-hover);
+  --color-ring: var(--ring);
+  --color-terminal-bg: var(--terminal-bg);
+  --color-terminal-text: var(--terminal-text);
+  --color-terminal-prompt: var(--terminal-prompt);
+  --color-terminal-cursor: var(--terminal-cursor);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+/* ========================================
+   LIGHT THEME
+   ======================================== */
+.light {
+  --background: #fafafa;
+  --background-secondary: #f0f0f5;
+  --background-tertiary: #e4e4e7;
+  --background-glass: rgba(255, 255, 255, 0.7);
+  --background-glass-hover: rgba(255, 255, 255, 0.85);
+  --foreground: #0a0a0a;
+  --foreground-muted: #4b5563;
+  --foreground-subtle: #6b7280;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-hover: rgba(0, 0, 0, 0.15);
+  --shadow-card: 0 4px 32px rgba(0, 0, 0, 0.06);
+  --shadow-card-hover: 0 8px 48px rgba(0, 0, 0, 0.1);
+  --gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(240, 240, 245, 0.6) 100%);
+}
+
+/* ========================================
+   BASE STYLES
+   ======================================== */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--background-tertiary) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--background-tertiary);
+  border-radius: 999px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--primary-glow-strong);
+  color: var(--foreground);
+}
+
+/* ========================================
+   GLASSMORPHISM UTILITIES
+   ======================================== */
+.glass {
+  background: var(--background-glass);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid var(--border);
+}
+
+.glass-hover:hover {
+  background: var(--background-glass-hover);
+  border-color: var(--border-hover);
+}
+
+.glass-card {
+  background: var(--gradient-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
+}
+
+/* ========================================
+   TERMINAL STYLES
+   ======================================== */
+.terminal-shell {
+  border: 1px solid var(--terminal-border);
+  border-radius: var(--radius-lg);
+  background: var(--terminal-bg);
+  box-shadow:
+    0 0 0 1px rgba(63, 63, 70, 0.3),
+    0 30px 80px -30px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(16, 185, 129, 0.06);
+  overflow: hidden;
+}
+
+.terminal-cursor {
+  display: inline-block;
+  color: var(--terminal-cursor);
+  animation: terminalBlink 1s step-end infinite;
+}
+
+/* ========================================
+   GRADIENT TEXTS
+   ======================================== */
+.text-gradient-primary {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.text-gradient-gold {
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.text-gradient-purple {
+  background: var(--gradient-purple);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ========================================
+   GLOW EFFECTS
+   ======================================== */
+.glow-primary {
+  box-shadow: 0 0 20px var(--primary-glow), 0 0 60px var(--primary-glow);
+}
+
+.glow-gold {
+  box-shadow: 0 0 20px var(--xp-gold-glow), 0 0 60px var(--xp-gold-glow);
+}
+
+.glow-border {
+  position: relative;
+}
+
+.glow-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: var(--gradient-border);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.glow-border:hover::before {
+  opacity: 1;
+}
+
+/* ========================================
+   ANIMATED GRADIENT BORDER
+   ======================================== */
+.animated-border {
+  position: relative;
+  overflow: hidden;
+}
+
+.animated-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(from var(--border-angle, 0deg), transparent 30%, var(--primary) 50%, var(--accent) 70%, transparent 80%);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  animation: borderRotate 4s linear infinite;
+}
+
+/* ========================================
+   KEYFRAME ANIMATIONS
+   ======================================== */
+@keyframes terminalBlink {
+  50% { opacity: 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  33% { transform: translateY(-8px) rotate(1deg); }
+  66% { transform: translateY(4px) rotate(-1deg); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 15px var(--primary-glow); }
+  50% { box-shadow: 0 0 30px var(--primary-glow-strong), 0 0 60px var(--primary-glow); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes borderRotate {
+  to { --border-angle: 360deg; }
+}
+
+@property --border-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes barFill {
+  from { width: 0; }
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ========================================
+   UTILITY ANIMATION CLASSES
+   ======================================== */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 4s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+/* ========================================
+   HERO BACKGROUND MESH
+   ======================================== */
+.hero-mesh {
+  position: relative;
+  background: var(--background);
+}
+
+.hero-mesh::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--gradient-hero);
+  pointer-events: none;
+}
+
+.hero-mesh::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+
+/* ========================================
+   GRID PATTERN BACKGROUND
+   ======================================== */
+.grid-pattern {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ========================================
+   PROGRESS BAR
+   ======================================== */
+.progress-bar-animated {
+  animation: barFill 1.2s ease-out forwards;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-bar-animated::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* ========================================
+   DIFFICULTY BADGES
+   ======================================== */
+.badge-beginner {
+  background: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.badge-intermediate {
+  background: rgba(251, 191, 36, 0.1);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.badge-advanced {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
