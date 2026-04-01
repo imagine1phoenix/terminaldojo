@@ -3,6 +3,41 @@ import { drizzle } from 'drizzle-orm/neon-http'
 import * as schema from '../schema'
 import { categories, commands, commandFlags, commandExamples, challenges, badges, users } from '../schema'
 import { hashSync } from 'bcryptjs'
+import { shellCategories } from '@/lib/constants/shell-categories'
+
+const iconByCategoryKey: Record<string, string> = {
+  linux: '🐧',
+  bash: '🐚',
+  network: '🌐',
+  curl: '🔄',
+  homebrew: '🍺',
+  git: '🐙',
+  docker: '🐳',
+  kubernetes: '☸️',
+  node: '📦',
+  python: '🐍',
+  cloud: '☁️',
+  'power-tools': '🔧',
+  security: '🔒',
+  meta: '🧠',
+}
+
+const colorByCategoryKey: Record<string, string> = {
+  linux: 'emerald',
+  bash: 'amber',
+  network: 'cyan',
+  curl: 'teal',
+  homebrew: 'orange',
+  git: 'orange',
+  docker: 'blue',
+  kubernetes: 'purple',
+  node: 'lime',
+  python: 'yellow',
+  cloud: 'sky',
+  'power-tools': 'slate',
+  security: 'red',
+  meta: 'indigo',
+}
 
 async function seed(): Promise<void> {
   const databaseUrl = process.env.DATABASE_URL
@@ -14,85 +49,116 @@ async function seed(): Promise<void> {
   const sql = neon(databaseUrl)
   const db = drizzle(sql, { schema })
 
+  const getCategoryId = (categoryIdsBySlug: Record<string, string>, slug: string): string => {
+    const categoryId = categoryIdsBySlug[slug]
+    if (!categoryId) {
+      throw new Error(`Missing seeded category for slug: ${slug}`)
+    }
+    return categoryId
+  }
+
   console.log('🌱 Seeding database...')
 
   // ── Categories ──
-  const [catLinux, catGit, catDocker, catK8s, catNetworking, catTextProcessing] = await db
+  const seededCategories = await db
     .insert(categories)
-    .values([
-      { name: 'Linux Core', slug: 'linux-core', description: 'Essential Linux/Unix commands', icon: '🐧', color: 'emerald', sortOrder: 1 },
-      { name: 'Git CLI', slug: 'git-cli', description: 'Version control with Git', icon: '🌿', color: 'orange', sortOrder: 2 },
-      { name: 'Docker', slug: 'docker', description: 'Container management commands', icon: '🐳', color: 'blue', sortOrder: 3 },
-      { name: 'Kubernetes', slug: 'kubernetes', description: 'Cluster orchestration with kubectl', icon: '☸️', color: 'purple', sortOrder: 4 },
-      { name: 'Networking', slug: 'networking', description: 'Network diagnostics and tools', icon: '🌐', color: 'cyan', sortOrder: 5 },
-      { name: 'Text Processing', slug: 'text-processing', description: 'Text manipulation and analysis', icon: '📝', color: 'amber', sortOrder: 6 },
-    ])
+    .values(
+      shellCategories.map((category, index) => ({
+        name: category.name,
+        slug: category.slug,
+        description: `${category.sections.length} subtopics in ${category.name}`,
+        icon: iconByCategoryKey[category.iconKey] ?? '💻',
+        color: colorByCategoryKey[category.iconKey] ?? 'zinc',
+        sortOrder: index + 1,
+      }))
+    )
     .returning()
+
+  const categoryIdsBySlug = Object.fromEntries(
+    seededCategories.map((category) => [category.slug, category.id])
+  )
+
+  const catLinux = getCategoryId(categoryIdsBySlug, 'linux-unix-core-commands')
+  const catGit = getCategoryId(categoryIdsBySlug, 'git-cli')
+  const catDocker = getCategoryId(categoryIdsBySlug, 'docker-cli')
+  const catK8s = getCategoryId(categoryIdsBySlug, 'kubernetes-kubectl')
+  const catNetworking = getCategoryId(categoryIdsBySlug, 'networking-commands')
 
   console.log('  ✅ Categories seeded')
 
   // ── Commands ──
-  const [cmdGrep, cmdFind, cmdAwk, cmdDockerRun, cmdKubectl, cmdGitRebase, cmdCurl, cmdSed, cmdChmod, cmdTar, cmdSsh, cmdXargs] = await db
+  const seededCommands = await db
     .insert(commands)
     .values([
-      { categoryId: catLinux.id, name: 'grep', slug: 'grep', shortDescription: 'Search for patterns in files', syntaxTemplate: 'grep [OPTIONS] PATTERN [FILE...]', difficulty: 'beginner' as const, dangerLevel: 'safe' as const, fullDescription: 'grep searches for PATTERN in each FILE. By default, grep prints the matching lines. It supports basic and extended regular expressions.' },
-      { categoryId: catLinux.id, name: 'find', slug: 'find', shortDescription: 'Find files and directories', syntaxTemplate: 'find [PATH] [EXPRESSION]', difficulty: 'beginner' as const, dangerLevel: 'safe' as const, fullDescription: 'find searches the directory tree rooted at each given starting-point by evaluating the given expression from left to right.' },
-      { categoryId: catTextProcessing.id, name: 'awk', slug: 'awk', shortDescription: 'Process structured text by columns', syntaxTemplate: "awk [OPTIONS] 'PATTERN {ACTION}' [FILE...]", difficulty: 'advanced' as const, dangerLevel: 'safe' as const, fullDescription: 'awk is a powerful text-processing language. It scans each line, splits it into fields, and applies pattern-action pairs.' },
-      { categoryId: catDocker.id, name: 'docker run', slug: 'docker-run', shortDescription: 'Start containers with custom options', syntaxTemplate: 'docker run [OPTIONS] IMAGE [COMMAND]', difficulty: 'intermediate' as const, dangerLevel: 'caution' as const, fullDescription: 'docker run creates and starts a new container from an image. You can configure networking, volumes, environment, and resource limits.' },
-      { categoryId: catK8s.id, name: 'kubectl get', slug: 'kubectl-get', shortDescription: 'Inspect cluster resources', syntaxTemplate: 'kubectl get [RESOURCE] [FLAGS]', difficulty: 'intermediate' as const, dangerLevel: 'safe' as const, fullDescription: 'kubectl get displays one or many resources. Prints a table of the most relevant information about the specified resources.' },
-      { categoryId: catGit.id, name: 'git rebase', slug: 'git-rebase', shortDescription: 'Reapply commits on another base', syntaxTemplate: 'git rebase [OPTIONS] [UPSTREAM]', difficulty: 'advanced' as const, dangerLevel: 'caution' as const, fullDescription: 'git rebase reapplies commits on top of another base tip. It can rewrite commit history.' },
-      { categoryId: catNetworking.id, name: 'curl', slug: 'curl', shortDescription: 'Transfer data with URLs', syntaxTemplate: 'curl [OPTIONS] [URL]', difficulty: 'beginner' as const, dangerLevel: 'safe' as const, fullDescription: 'curl transfers data from or to a server using supported protocols including HTTP, HTTPS, FTP, and more.' },
-      { categoryId: catTextProcessing.id, name: 'sed', slug: 'sed', shortDescription: 'Stream editor for text transformation', syntaxTemplate: "sed [OPTIONS] 'COMMAND' [FILE...]", difficulty: 'intermediate' as const, dangerLevel: 'safe' as const, fullDescription: 'sed is a stream editor used for text transformations on an input stream (a file or piped input).' },
-      { categoryId: catLinux.id, name: 'chmod', slug: 'chmod', shortDescription: 'Change file permissions', syntaxTemplate: 'chmod [OPTIONS] MODE FILE', difficulty: 'beginner' as const, dangerLevel: 'caution' as const, fullDescription: 'chmod changes the file mode bits (permissions) of each given file.' },
-      { categoryId: catLinux.id, name: 'tar', slug: 'tar', shortDescription: 'Archive and compress files', syntaxTemplate: 'tar [OPTIONS] [FILE...]', difficulty: 'beginner' as const, dangerLevel: 'safe' as const, fullDescription: 'tar creates, extracts, and manages archive files. Often combined with gzip or bzip2 compression.' },
-      { categoryId: catNetworking.id, name: 'ssh', slug: 'ssh', shortDescription: 'Secure remote shell access', syntaxTemplate: 'ssh [OPTIONS] [USER@]HOST', difficulty: 'intermediate' as const, dangerLevel: 'safe' as const, fullDescription: 'ssh connects to a remote host securely using the SSH protocol for encrypted communication.' },
-      { categoryId: catLinux.id, name: 'xargs', slug: 'xargs', shortDescription: 'Build command lines from stdin', syntaxTemplate: 'xargs [OPTIONS] [COMMAND]', difficulty: 'advanced' as const, dangerLevel: 'safe' as const, fullDescription: 'xargs reads items from standard input and executes a command with those items as arguments.' },
+      { categoryId: catLinux, name: 'grep', slug: 'grep', shortDescription: 'Search for patterns in files', syntaxTemplate: 'grep [OPTIONS] PATTERN [FILE...]', difficulty: 'beginner' as const, dangerLevel: 'safe' as const, fullDescription: 'grep searches for PATTERN in each FILE. By default, grep prints the matching lines. It supports basic and extended regular expressions.' },
+      { categoryId: catLinux, name: 'find', slug: 'find', shortDescription: 'Find files and directories', syntaxTemplate: 'find [PATH] [EXPRESSION]', difficulty: 'beginner' as const, dangerLevel: 'safe' as const, fullDescription: 'find searches the directory tree rooted at each given starting-point by evaluating the given expression from left to right.' },
+      { categoryId: catLinux, name: 'awk', slug: 'awk', shortDescription: 'Process structured text by columns', syntaxTemplate: "awk [OPTIONS] 'PATTERN {ACTION}' [FILE...]", difficulty: 'advanced' as const, dangerLevel: 'safe' as const, fullDescription: 'awk is a powerful text-processing language. It scans each line, splits it into fields, and applies pattern-action pairs.' },
+      { categoryId: catDocker, name: 'docker run', slug: 'docker-run', shortDescription: 'Start containers with custom options', syntaxTemplate: 'docker run [OPTIONS] IMAGE [COMMAND]', difficulty: 'intermediate' as const, dangerLevel: 'caution' as const, fullDescription: 'docker run creates and starts a new container from an image. You can configure networking, volumes, environment, and resource limits.' },
+      { categoryId: catK8s, name: 'kubectl get', slug: 'kubectl-get', shortDescription: 'Inspect cluster resources', syntaxTemplate: 'kubectl get [RESOURCE] [FLAGS]', difficulty: 'intermediate' as const, dangerLevel: 'safe' as const, fullDescription: 'kubectl get displays one or many resources. Prints a table of the most relevant information about the specified resources.' },
+      { categoryId: catGit, name: 'git rebase', slug: 'git-rebase', shortDescription: 'Reapply commits on another base', syntaxTemplate: 'git rebase [OPTIONS] [UPSTREAM]', difficulty: 'advanced' as const, dangerLevel: 'caution' as const, fullDescription: 'git rebase reapplies commits on top of another base tip. It can rewrite commit history.' },
+      { categoryId: catNetworking, name: 'curl', slug: 'curl', shortDescription: 'Transfer data with URLs', syntaxTemplate: 'curl [OPTIONS] [URL]', difficulty: 'beginner' as const, dangerLevel: 'safe' as const, fullDescription: 'curl transfers data from or to a server using supported protocols including HTTP, HTTPS, FTP, and more.' },
+      { categoryId: catLinux, name: 'sed', slug: 'sed', shortDescription: 'Stream editor for text transformation', syntaxTemplate: "sed [OPTIONS] 'COMMAND' [FILE...]", difficulty: 'intermediate' as const, dangerLevel: 'safe' as const, fullDescription: 'sed is a stream editor used for text transformations on an input stream (a file or piped input).' },
+      { categoryId: catLinux, name: 'chmod', slug: 'chmod', shortDescription: 'Change file permissions', syntaxTemplate: 'chmod [OPTIONS] MODE FILE', difficulty: 'beginner' as const, dangerLevel: 'caution' as const, fullDescription: 'chmod changes the file mode bits (permissions) of each given file.' },
+      { categoryId: catLinux, name: 'tar', slug: 'tar', shortDescription: 'Archive and compress files', syntaxTemplate: 'tar [OPTIONS] [FILE...]', difficulty: 'beginner' as const, dangerLevel: 'safe' as const, fullDescription: 'tar creates, extracts, and manages archive files. Often combined with gzip or bzip2 compression.' },
+      { categoryId: catNetworking, name: 'ssh', slug: 'ssh', shortDescription: 'Secure remote shell access', syntaxTemplate: 'ssh [OPTIONS] [USER@]HOST', difficulty: 'intermediate' as const, dangerLevel: 'safe' as const, fullDescription: 'ssh connects to a remote host securely using the SSH protocol for encrypted communication.' },
+      { categoryId: catLinux, name: 'xargs', slug: 'xargs', shortDescription: 'Build command lines from stdin', syntaxTemplate: 'xargs [OPTIONS] [COMMAND]', difficulty: 'advanced' as const, dangerLevel: 'safe' as const, fullDescription: 'xargs reads items from standard input and executes a command with those items as arguments.' },
     ])
     .returning()
+
+  const commandIdsBySlug = Object.fromEntries(
+    seededCommands.map((command) => [command.slug, command.id])
+  )
+  const cmdGrepId = commandIdsBySlug.grep
+  const cmdFindId = commandIdsBySlug.find
+  const cmdDockerRunId = commandIdsBySlug['docker-run']
+
+  if (!cmdGrepId || !cmdFindId || !cmdDockerRunId) {
+    throw new Error('Missing one or more required seeded command IDs')
+  }
 
   console.log('  ✅ Commands seeded')
 
   // ── Flags for grep ──
   await db.insert(commandFlags).values([
-    { commandId: cmdGrep.id, flag: '-i', description: 'Case-insensitive search', example: "grep -i 'error' log.txt", isCommon: true, sortOrder: 1 },
-    { commandId: cmdGrep.id, flag: '-r', description: 'Recursive search through directories', example: "grep -r 'TODO' ./src", isCommon: true, sortOrder: 2 },
-    { commandId: cmdGrep.id, flag: '-n', description: 'Show line numbers in output', example: "grep -n 'function' app.js", isCommon: true, sortOrder: 3 },
-    { commandId: cmdGrep.id, flag: '-c', description: 'Count matching lines instead of printing', example: "grep -c 'error' server.log", isCommon: true, sortOrder: 4 },
-    { commandId: cmdGrep.id, flag: '-v', description: 'Invert match — show non-matching lines', example: "grep -v 'debug' log.txt", isCommon: true, sortOrder: 5 },
-    { commandId: cmdGrep.id, flag: '-l', description: 'Show only filenames with matches', example: "grep -rl 'password' /etc/", isCommon: true, sortOrder: 6 },
+    { commandId: cmdGrepId, flag: '-i', description: 'Case-insensitive search', example: "grep -i 'error' log.txt", isCommon: true, sortOrder: 1 },
+    { commandId: cmdGrepId, flag: '-r', description: 'Recursive search through directories', example: "grep -r 'TODO' ./src", isCommon: true, sortOrder: 2 },
+    { commandId: cmdGrepId, flag: '-n', description: 'Show line numbers in output', example: "grep -n 'function' app.js", isCommon: true, sortOrder: 3 },
+    { commandId: cmdGrepId, flag: '-c', description: 'Count matching lines instead of printing', example: "grep -c 'error' server.log", isCommon: true, sortOrder: 4 },
+    { commandId: cmdGrepId, flag: '-v', description: 'Invert match — show non-matching lines', example: "grep -v 'debug' log.txt", isCommon: true, sortOrder: 5 },
+    { commandId: cmdGrepId, flag: '-l', description: 'Show only filenames with matches', example: "grep -rl 'password' /etc/", isCommon: true, sortOrder: 6 },
   ])
 
   // ── Flags for find ──
   await db.insert(commandFlags).values([
-    { commandId: cmdFind.id, flag: '-name', description: 'Search by filename pattern', example: "find . -name '*.log'", isCommon: true, sortOrder: 1 },
-    { commandId: cmdFind.id, flag: '-type', description: 'Filter by type (f=file, d=directory)', example: 'find /var -type d', isCommon: true, sortOrder: 2 },
-    { commandId: cmdFind.id, flag: '-mtime', description: 'Find files modified N days ago', example: 'find . -mtime -7', isCommon: true, sortOrder: 3 },
-    { commandId: cmdFind.id, flag: '-size', description: 'Filter by file size', example: 'find . -size +100M', isCommon: true, sortOrder: 4 },
-    { commandId: cmdFind.id, flag: '-exec', description: 'Execute command on each match', example: "find . -name '*.tmp' -exec rm {} \\;", isCommon: true, sortOrder: 5 },
+    { commandId: cmdFindId, flag: '-name', description: 'Search by filename pattern', example: "find . -name '*.log'", isCommon: true, sortOrder: 1 },
+    { commandId: cmdFindId, flag: '-type', description: 'Filter by type (f=file, d=directory)', example: 'find /var -type d', isCommon: true, sortOrder: 2 },
+    { commandId: cmdFindId, flag: '-mtime', description: 'Find files modified N days ago', example: 'find . -mtime -7', isCommon: true, sortOrder: 3 },
+    { commandId: cmdFindId, flag: '-size', description: 'Filter by file size', example: 'find . -size +100M', isCommon: true, sortOrder: 4 },
+    { commandId: cmdFindId, flag: '-exec', description: 'Execute command on each match', example: "find . -name '*.tmp' -exec rm {} \\;", isCommon: true, sortOrder: 5 },
   ])
 
   // ── Flags for docker run ──
   await db.insert(commandFlags).values([
-    { commandId: cmdDockerRun.id, flag: '-d', description: 'Run container in detached mode', example: 'docker run -d nginx', isCommon: true, sortOrder: 1 },
-    { commandId: cmdDockerRun.id, flag: '-p', description: 'Map host port to container port', example: 'docker run -p 8080:80 nginx', isCommon: true, sortOrder: 2 },
-    { commandId: cmdDockerRun.id, flag: '-v', description: 'Mount a volume', example: 'docker run -v ./data:/app/data myapp', isCommon: true, sortOrder: 3 },
-    { commandId: cmdDockerRun.id, flag: '--name', description: 'Assign a name to the container', example: 'docker run --name myapp node:20', isCommon: true, sortOrder: 4 },
-    { commandId: cmdDockerRun.id, flag: '-e', description: 'Set environment variables', example: 'docker run -e NODE_ENV=production myapp', isCommon: true, sortOrder: 5 },
+    { commandId: cmdDockerRunId, flag: '-d', description: 'Run container in detached mode', example: 'docker run -d nginx', isCommon: true, sortOrder: 1 },
+    { commandId: cmdDockerRunId, flag: '-p', description: 'Map host port to container port', example: 'docker run -p 8080:80 nginx', isCommon: true, sortOrder: 2 },
+    { commandId: cmdDockerRunId, flag: '-v', description: 'Mount a volume', example: 'docker run -v ./data:/app/data myapp', isCommon: true, sortOrder: 3 },
+    { commandId: cmdDockerRunId, flag: '--name', description: 'Assign a name to the container', example: 'docker run --name myapp node:20', isCommon: true, sortOrder: 4 },
+    { commandId: cmdDockerRunId, flag: '-e', description: 'Set environment variables', example: 'docker run -e NODE_ENV=production myapp', isCommon: true, sortOrder: 5 },
   ])
 
   console.log('  ✅ Command flags seeded')
 
   // ── Examples for grep ──
   await db.insert(commandExamples).values([
-    { commandId: cmdGrep.id, title: 'Search for errors in log file', commandText: "grep 'error' /var/log/syslog", explanation: 'Searches for the word error in the syslog file', expectedOutput: 'Mar 31 12:04:22 server error: connection timeout', sortOrder: 1 },
-    { commandId: cmdGrep.id, title: 'Recursive search in source code', commandText: "grep -rn 'TODO' ./src/", explanation: 'Recursively search all files in src/ for TODO comments, showing line numbers', expectedOutput: './src/app.ts:42:  // TODO: add error handling', sortOrder: 2 },
-    { commandId: cmdGrep.id, title: 'Count occurrences', commandText: "grep -c 'WARNING' server.log", explanation: 'Counts how many lines contain WARNING', expectedOutput: '23', sortOrder: 3 },
+    { commandId: cmdGrepId, title: 'Search for errors in log file', commandText: "grep 'error' /var/log/syslog", explanation: 'Searches for the word error in the syslog file', expectedOutput: 'Mar 31 12:04:22 server error: connection timeout', sortOrder: 1 },
+    { commandId: cmdGrepId, title: 'Recursive search in source code', commandText: "grep -rn 'TODO' ./src/", explanation: 'Recursively search all files in src/ for TODO comments, showing line numbers', expectedOutput: './src/app.ts:42:  // TODO: add error handling', sortOrder: 2 },
+    { commandId: cmdGrepId, title: 'Count occurrences', commandText: "grep -c 'WARNING' server.log", explanation: 'Counts how many lines contain WARNING', expectedOutput: '23', sortOrder: 3 },
   ])
 
   // ── Examples for find ──
   await db.insert(commandExamples).values([
-    { commandId: cmdFind.id, title: 'Find large files', commandText: 'find /var -size +100M -type f', explanation: 'Finds all files over 100MB in /var', expectedOutput: '/var/log/syslog.1\n/var/cache/apt/pkgcache.bin', sortOrder: 1 },
-    { commandId: cmdFind.id, title: 'Find recently modified files', commandText: 'find . -mtime -1 -type f', explanation: 'Find files modified in the last 24 hours', expectedOutput: './src/app.ts\n./package.json', sortOrder: 2 },
+    { commandId: cmdFindId, title: 'Find large files', commandText: 'find /var -size +100M -type f', explanation: 'Finds all files over 100MB in /var', expectedOutput: '/var/log/syslog.1\n/var/cache/apt/pkgcache.bin', sortOrder: 1 },
+    { commandId: cmdFindId, title: 'Find recently modified files', commandText: 'find . -mtime -1 -type f', explanation: 'Find files modified in the last 24 hours', expectedOutput: './src/app.ts\n./package.json', sortOrder: 2 },
   ])
 
   console.log('  ✅ Command examples seeded')

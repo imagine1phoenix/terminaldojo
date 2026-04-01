@@ -4,23 +4,24 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, ArrowRight, CheckCircle2, Clock, Circle } from 'lucide-react'
+import { shellCategories } from '@/lib/constants/shell-categories'
 
 const commands = [
-  { name: 'grep', slug: 'grep', description: 'Search for patterns in files', category: 'Linux Core', icon: '🐧', difficulty: 'beginner' as const, status: 'completed' as const },
-  { name: 'find', slug: 'find', description: 'Find files and directories', category: 'Linux Core', icon: '🐧', difficulty: 'beginner' as const, status: 'in_progress' as const },
-  { name: 'awk', slug: 'awk', description: 'Process structured text by columns', category: 'Text Processing', icon: '📝', difficulty: 'advanced' as const, status: 'not_started' as const },
-  { name: 'docker run', slug: 'docker-run', description: 'Start containers with custom options', category: 'Docker', icon: '🐳', difficulty: 'intermediate' as const, status: 'not_started' as const },
-  { name: 'kubectl get', slug: 'kubectl-get', description: 'Inspect cluster resources', category: 'Kubernetes', icon: '☸️', difficulty: 'intermediate' as const, status: 'in_progress' as const },
+  { name: 'grep', slug: 'grep', description: 'Search for patterns in files', category: 'Linux/Unix Core Commands', icon: '🐧', difficulty: 'beginner' as const, status: 'completed' as const },
+  { name: 'find', slug: 'find', description: 'Find files and directories', category: 'Linux/Unix Core Commands', icon: '🐧', difficulty: 'beginner' as const, status: 'in_progress' as const },
+  { name: 'awk', slug: 'awk', description: 'Process structured text by columns', category: 'Linux/Unix Core Commands', icon: '📝', difficulty: 'advanced' as const, status: 'not_started' as const },
+  { name: 'docker run', slug: 'docker-run', description: 'Start containers with custom options', category: 'Docker CLI', icon: '🐳', difficulty: 'intermediate' as const, status: 'not_started' as const },
+  { name: 'kubectl get', slug: 'kubectl-get', description: 'Inspect cluster resources', category: 'Kubernetes (kubectl)', icon: '☸️', difficulty: 'intermediate' as const, status: 'in_progress' as const },
   { name: 'git rebase', slug: 'git-rebase', description: 'Reapply commits on another base', category: 'Git CLI', icon: '🌿', difficulty: 'advanced' as const, status: 'not_started' as const },
-  { name: 'curl', slug: 'curl', description: 'Transfer data with various protocols', category: 'Networking', icon: '🌐', difficulty: 'beginner' as const, status: 'completed' as const },
-  { name: 'chmod', slug: 'chmod', description: 'Change file access permissions', category: 'Linux Core', icon: '🐧', difficulty: 'beginner' as const, status: 'completed' as const },
-  { name: 'ssh', slug: 'ssh', description: 'Secure remote server connections', category: 'Networking', icon: '🌐', difficulty: 'intermediate' as const, status: 'in_progress' as const },
-  { name: 'tar', slug: 'tar', description: 'Archive and compress files', category: 'Linux Core', icon: '🐧', difficulty: 'beginner' as const, status: 'not_started' as const },
+  { name: 'curl', slug: 'curl', description: 'Transfer data with various protocols', category: 'Networking Commands', icon: '🌐', difficulty: 'beginner' as const, status: 'completed' as const },
+  { name: 'chmod', slug: 'chmod', description: 'Change file access permissions', category: 'Linux/Unix Core Commands', icon: '🐧', difficulty: 'beginner' as const, status: 'completed' as const },
+  { name: 'ssh', slug: 'ssh', description: 'Secure remote server connections', category: 'Networking Commands', icon: '🌐', difficulty: 'intermediate' as const, status: 'in_progress' as const },
+  { name: 'tar', slug: 'tar', description: 'Archive and compress files', category: 'Linux/Unix Core Commands', icon: '🐧', difficulty: 'beginner' as const, status: 'not_started' as const },
   { name: 'tmux', slug: 'tmux', description: 'Terminal multiplexer for sessions', category: 'Power Tools', icon: '⚡', difficulty: 'intermediate' as const, status: 'not_started' as const },
   { name: 'jq', slug: 'jq', description: 'Command-line JSON processor', category: 'Power Tools', icon: '⚡', difficulty: 'intermediate' as const, status: 'not_started' as const },
 ]
 
-const categories = ['All', 'Linux Core', 'Git CLI', 'Docker', 'Kubernetes', 'Networking', 'Text Processing', 'Power Tools']
+const categories = ['All', ...shellCategories.map((category) => category.name)]
 const difficulties = ['All', 'beginner', 'intermediate', 'advanced']
 
 const statusIcon = (s: string) => {

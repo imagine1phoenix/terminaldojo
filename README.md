@@ -19,6 +19,7 @@ Core planning docs are in the `docs` folder.
 
 ## Documentation Index
 - Project overview: [docs/project-overview.md](docs/project-overview.md)
+- Shell categories taxonomy: [src/lib/constants/shell-categories.ts](src/lib/constants/shell-categories.ts)
 - Learning engine: [docs/learning-engine.md](docs/learning-engine.md)
 - Architecture overview: [docs/architecture-overview.md](docs/architecture-overview.md)
 - Database schema: [docs/database-schema.md](docs/database-schema.md)
