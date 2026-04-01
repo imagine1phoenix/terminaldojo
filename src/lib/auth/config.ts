@@ -10,6 +10,10 @@ const authSecret =
   process.env.NEXTAUTH_SECRET ??
   'local-dev-secret-change-me'
 
+const hasDatabaseUrl = Boolean(process.env.DATABASE_URL)
+const localDevDemoEmail = process.env.DEV_LOGIN_EMAIL ?? 'alex@example.com'
+const localDevDemoPassword = process.env.DEV_LOGIN_PASSWORD ?? 'password123'
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: authSecret,
   session: { strategy: 'jwt' },
@@ -28,6 +32,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const email = credentials.email as string
         const password = credentials.password as string
+
+        // Dev fallback when DATABASE_URL is unavailable.
+        if (!hasDatabaseUrl && process.env.NODE_ENV !== 'production') {
+          if (email === localDevDemoEmail && password === localDevDemoPassword) {
+            return {
+              id: 'local-dev-user',
+              email: localDevDemoEmail,
+              name: 'Alex Chen',
+              image: null,
+            }
+          }
+          return null
+        }
 
         const [user] = await db
           .select()
