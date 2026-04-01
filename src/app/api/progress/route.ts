@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { users, userCommandProgress, userChallengeProgress, userDailyActivity } from '@/lib/db/schema'
-import { eq, sum, count } from 'drizzle-orm'
+import { eq, count } from 'drizzle-orm'
 import { auth } from '@/lib/auth/config'
 
 export async function GET(): Promise<NextResponse> {

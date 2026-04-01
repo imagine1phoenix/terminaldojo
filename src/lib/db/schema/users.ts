@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, text, timestamp, integer, boolean, pgEnum } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, varchar, timestamp, integer, pgEnum } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
 export const subscriptionTierEnum = pgEnum('subscription_tier', ['free', 'pro', 'team'])

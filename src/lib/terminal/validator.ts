@@ -1,4 +1,5 @@
 const WHITELIST = new Set([
+  'cd',
   'ls', 'cat', 'echo', 'pwd', 'whoami', 'date', 'cal', 'uptime',
   'head', 'tail', 'wc', 'sort', 'uniq', 'tr', 'cut', 'paste',
   'grep', 'find', 'awk', 'sed', 'xargs',

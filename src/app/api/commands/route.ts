@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { commands, categories, commandFlags, commandExamples } from '@/lib/db/schema'
+import { commands, categories } from '@/lib/db/schema'
 import { eq, ilike, and, SQL } from 'drizzle-orm'
 
 export async function GET(request: NextRequest): Promise<NextResponse> {

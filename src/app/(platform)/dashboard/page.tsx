@@ -1,267 +1,278 @@
 'use client'
 
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
-  Flame,
-  Trophy,
-  BookOpen,
-  Swords,
-  Target,
   ArrowRight,
-  Zap,
-  TrendingUp,
-  Clock,
+  Award,
   CheckCircle2,
+  Clock3,
+  Sparkles,
+  Swords,
+  Telescope,
+  Trophy,
 } from 'lucide-react'
+import { ryuhaSchools } from '@/lib/constants/ryuha-schools'
+import { challengeItems, commandItems } from '@/lib/mock-data'
+import { getRankProgress } from '@/lib/constants/belt-ranks'
 
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
-}
-const item = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' as const } },
+const BeltAvatarWidget = dynamic(
+  () => import('@/components/platform/belt-avatar-widget').then((mod) => mod.BeltAvatarWidget),
+  { ssr: false },
+)
+
+const SkillRadarChart = dynamic(
+  () => import('@/components/platform/skill-radar-chart').then((mod) => mod.SkillRadarChart),
+  { ssr: false },
+)
+
+const schoolDifficulty = ['Beginner', 'Intermediate', 'Advanced', 'Intermediate', 'Advanced', 'Intermediate']
+
+const timeline = [
+  {
+    id: '1',
+    type: 'command',
+    title: 'Learned command: grep -rn',
+    time: '09:42',
+    detail: 'Completed Linux Core lesson 04',
+  },
+  {
+    id: '2',
+    type: 'challenge',
+    title: 'Finished daily challenge',
+    time: '08:10',
+    detail: 'Find all .log files over 10MB',
+  },
+  {
+    id: '3',
+    type: 'seal',
+    title: 'Earned seal: Pipe Artisan',
+    time: 'Yesterday',
+    detail: 'Used 3 chained commands without hints',
+  },
+  {
+    id: '4',
+    type: 'rank',
+    title: 'Rank-up ceremony unlocked',
+    time: 'Yesterday',
+    detail: 'Orange Belt unlocked at 1,400 Ki',
+  },
+]
+
+function itemIcon(type: string) {
+  if (type === 'command') return <Sparkles className="h-4 w-4 text-cyan-300" />
+  if (type === 'challenge') return <Swords className="h-4 w-4 text-red-300" />
+  if (type === 'seal') return <Award className="h-4 w-4 text-violet-300" />
+  return <Trophy className="h-4 w-4 text-amber-300" />
 }
 
 export default function DashboardPage() {
+  const [progressView, setProgressView] = useState<'belt' | 'radar'>('belt')
+  const kiTotal = 1234
+  const rank = getRankProgress(kiTotal)
+  const todayTrial = challengeItems[0]
+
+  const schoolStats = useMemo(() => {
+    return ryuhaSchools.slice(0, 8).map((school, index) => {
+      const count = commandItems.filter((command) =>
+        school.tools.some((tool) => command.name.toLowerCase().includes(tool.toLowerCase().split(' ')[0])),
+      ).length
+
+      return {
+        school,
+        commandCount: Math.max(6, count * 4 + 7),
+        difficulty: schoolDifficulty[index % schoolDifficulty.length],
+      }
+    })
+  }, [])
+
+  const radarAxes = [
+    { id: 'linux', label: 'Linux', value: 78, href: '/app/paths/the-way-of-linux' },
+    { id: 'git', label: 'Git', value: 64, href: '/app/paths/the-way-of-git' },
+    { id: 'docker', label: 'Docker', value: 47, href: '/app/paths/the-way-of-docker' },
+    { id: 'k8s', label: 'K8s', value: 33, href: '/app/paths/the-way-of-kubernetes' },
+    { id: 'bash', label: 'Bash', value: 72, href: '/app/paths/the-way-of-bash' },
+    { id: 'curl', label: 'curl', value: 58, href: '/app/paths/the-way-of-networking' },
+    { id: 'cloud', label: 'Cloud', value: 38, href: '/app/paths/the-way-of-cloud' },
+  ]
+
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
-      {/* ─── Welcome banner ─── */}
-      <motion.section
-        variants={item}
-        className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-background-secondary/80 to-background-tertiary/30 p-6 md:p-8"
-      >
-        <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-accent/5 blur-2xl" />
-        <div className="relative">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-black tracking-tight md:text-4xl">
-                Welcome back, <span className="text-gradient-primary">Alex</span> 🥷
-              </h1>
-              <p className="mt-2 text-foreground-muted">
-                Level 5 — Bash Enthusiast · 260 XP to Power User
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-sm font-semibold text-orange-400">
-                <Flame className="h-4 w-4" /> 7 day streak
-              </span>
-            </div>
-          </div>
-          {/* XP Progress bar */}
-          <div className="mt-6">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">Level 5 → Level 6</span>
-              <span className="text-foreground-muted">1,240 / 1,500 XP</span>
-            </div>
-            <div className="mt-2 h-3 overflow-hidden rounded-full bg-background-tertiary">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: '82%' }}
-                transition={{ duration: 1.2, ease: 'easeOut', delay: 0.3 }}
-                className="h-full rounded-full bg-gradient-to-r from-primary to-accent relative overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-              </motion.div>
-            </div>
-          </div>
-        </div>
-      </motion.section>
-
-      {/* ─── Stat cards ─── */}
-      <motion.section variants={item} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          { label: 'Commands Learned', value: '42', icon: BookOpen, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-          { label: 'XP This Week', value: '156', icon: Zap, color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
-          { label: 'Challenges Solved', value: '18', icon: CheckCircle2, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
-          { label: 'Current Rank', value: '#5', icon: TrendingUp, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
-        ].map((stat, i) => {
-          const Icon = stat.icon
-          return (
-            <motion.article
-              key={stat.label}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
-              className={`glass-card group p-5 ${stat.border}`}
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-wider text-foreground-subtle">{stat.label}</p>
-                <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${stat.bg}`}>
-                  <Icon className={`h-4 w-4 ${stat.color}`} />
-                </div>
-              </div>
-              <p className="mt-3 text-3xl font-black">{stat.value}</p>
-            </motion.article>
-          )
-        })}
-      </motion.section>
-
-      {/* ─── Continue learning + Daily challenge ─── */}
-      <motion.section variants={item} className="grid gap-4 lg:grid-cols-2">
-        {/* Continue Learning */}
-        <article className="glass-card p-6">
-          <div className="flex items-center gap-2 mb-1">
-            <BookOpen className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-bold">Continue Learning</h2>
-          </div>
-          <p className="text-sm text-foreground-muted">
-            Pick up where you left off with the <span className="font-semibold text-foreground">find</span> command.
-          </p>
-          <div className="mt-4 rounded-xl border border-border bg-terminal-bg p-4 font-mono text-sm">
-            <p className="text-terminal-prompt">$ find ./logs -name &apos;*.log&apos; -size +10M</p>
-            <p className="mt-1 text-zinc-500">Find files and directories in the filesystem</p>
-          </div>
-          <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="badge-beginner rounded-full px-2.5 py-0.5 text-xs font-medium">beginner</span>
-              <span className="text-xs text-foreground-subtle">Linux Core</span>
-            </div>
-            <Link
-              href="/command/find"
-              className="group inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-black transition-all hover:bg-primary-hover hover:shadow-lg hover:shadow-primary/20"
-            >
-              Resume <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-          </div>
-        </article>
-
-        {/* Daily Challenge */}
-        <article className="glass-card relative overflow-hidden border-warning/20 p-6">
-          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-amber-500/5 blur-2xl" />
-          <div className="relative">
-            <div className="flex items-center gap-2 mb-1">
-              <Target className="h-5 w-5 text-amber-400" />
-              <h2 className="text-lg font-bold">Daily Challenge</h2>
-            </div>
-            <p className="text-sm text-foreground-muted">
-              Find all .log files over 10MB
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.45 }} className="space-y-5">
+      <section className="rounded-3xl border border-red-500/25 bg-[#05070e]/95 p-5 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+              Main Dashboard <span className="text-red-300">Dojo Control</span>
+            </h1>
+            <p className="mt-1 text-sm text-slate-300">
+              Train, track rank progression, choose schools, and continue your path.
             </p>
-            <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
-              <span className="badge-intermediate rounded-full px-2.5 py-0.5 text-xs font-medium">intermediate</span>
-              <span className="inline-flex items-center gap-1 text-amber-400">
-                <Trophy className="h-3.5 w-3.5" /> +40 XP
-              </span>
-              <span className="inline-flex items-center gap-1 text-foreground-subtle">
-                <Clock className="h-3.5 w-3.5" /> ~8 min
-              </span>
-            </div>
-            <Link
-              href="/challenge/101"
-              className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm font-semibold text-amber-400 transition-all hover:bg-amber-500/20"
-            >
-              <Swords className="h-4 w-4" /> Start Challenge
-            </Link>
           </div>
-        </article>
-      </motion.section>
-
-      {/* ─── Category progress ─── */}
-      <motion.section variants={item} className="glass-card p-6">
-        <h2 className="text-lg font-bold">Category Progress</h2>
-        <div className="mt-5 space-y-4">
-          {[
-            { name: 'Linux Core', icon: '🐧', learned: 24, total: 85, color: 'from-emerald-500 to-cyan-400' },
-            { name: 'Git CLI', icon: '🌿', learned: 10, total: 42, color: 'from-orange-500 to-amber-400' },
-            { name: 'Docker CLI', icon: '🐳', learned: 6, total: 35, color: 'from-blue-500 to-indigo-400' },
-            { name: 'Kubernetes', icon: '☸️', learned: 5, total: 28, color: 'from-purple-500 to-pink-400' },
-            { name: 'Networking', icon: '🌐', learned: 8, total: 30, color: 'from-teal-500 to-emerald-400' },
-            { name: 'Power Tools', icon: '⚡', learned: 3, total: 22, color: 'from-yellow-500 to-orange-400' },
-          ].map((cat) => {
-            const pct = Math.round((cat.learned / cat.total) * 100)
-            return (
-              <div key={cat.name}>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2">
-                    <span>{cat.icon}</span>
-                    <span className="font-medium">{cat.name}</span>
-                  </span>
-                  <span className="text-foreground-muted">
-                    {cat.learned}/{cat.total} <span className="text-foreground-subtle">({pct}%)</span>
-                  </span>
-                </div>
-                <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-background-tertiary">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${pct}%` }}
-                    transition={{ duration: 1, ease: 'easeOut', delay: 0.5 }}
-                    className={`h-full rounded-full bg-gradient-to-r ${cat.color} relative overflow-hidden`}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent animate-shimmer" />
-                  </motion.div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </motion.section>
-
-      {/* ─── Activity heatmap ─── */}
-      <motion.section variants={item} className="glass-card p-6">
-        <h2 className="text-lg font-bold">Activity — Last 30 Days</h2>
-        <div className="mt-4 flex flex-wrap gap-1.5">
-          {Array.from({ length: 30 }).map((_, i) => {
-            const lvl = [0, 0, 1, 2, 3, 4, 0, 1, 2, 0, 3, 4, 1, 2, 0, 0, 1, 3, 4, 2, 1, 0, 2, 3, 1, 4, 0, 1, 2, 3][i]
-            const opacity = lvl === 0 ? 'bg-background-tertiary' : lvl === 1 ? 'bg-primary/20' : lvl === 2 ? 'bg-primary/40' : lvl === 3 ? 'bg-primary/60' : 'bg-primary/90'
-            return (
-              <motion.div
-                key={i}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.2, delay: 0.8 + i * 0.02 }}
-                className={`h-6 w-6 rounded-md ${opacity} transition-colors`}
-                title={`Day ${i + 1}: ${lvl} activities`}
-              />
-            )
-          })}
-        </div>
-        <div className="mt-3 flex items-center gap-2 text-[10px] text-foreground-subtle">
-          <span>Less</span>
-          <div className="flex gap-1">
-            <div className="h-3 w-3 rounded-sm bg-background-tertiary" />
-            <div className="h-3 w-3 rounded-sm bg-primary/20" />
-            <div className="h-3 w-3 rounded-sm bg-primary/40" />
-            <div className="h-3 w-3 rounded-sm bg-primary/60" />
-            <div className="h-3 w-3 rounded-sm bg-primary/90" />
-          </div>
-          <span>More</span>
-        </div>
-      </motion.section>
-
-      {/* ─── Recent Badges ─── */}
-      <motion.section variants={item} className="glass-card p-6">
-        <h2 className="text-lg font-bold">Recent Achievements</h2>
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-          {[
-            { name: 'First Command', icon: '🎯', rarity: 'common', earned: true },
-            { name: 'Pipe Master', icon: '🔗', rarity: 'rare', earned: true },
-            { name: 'Speed Demon', icon: '⚡', rarity: 'rare', earned: true },
-            { name: 'One-Liner King', icon: '👑', rarity: 'epic', earned: false },
-          ].map((badge) => (
-            <div
-              key={badge.name}
-              className={`flex flex-col items-center gap-2 rounded-xl border p-4 text-center transition-all ${
-                badge.earned
-                  ? 'border-border bg-background-secondary/50'
-                  : 'border-border/50 bg-background-secondary/20 opacity-40 grayscale'
+          <div className="inline-flex rounded-xl border border-white/10 bg-black/30 p-1">
+            <button
+              type="button"
+              onClick={() => setProgressView('belt')}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                progressView === 'belt' ? 'bg-red-500/20 text-red-200' : 'text-slate-300'
               }`}
             >
-              <span className="text-3xl">{badge.icon}</span>
-              <span className="text-xs font-semibold">{badge.name}</span>
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                badge.rarity === 'common' ? 'bg-zinc-500/10 text-zinc-400'
-                : badge.rarity === 'rare' ? 'bg-blue-500/10 text-blue-400'
-                : badge.rarity === 'epic' ? 'bg-purple-500/10 text-purple-400'
-                : 'bg-amber-500/10 text-amber-400'
-              }`}>
-                {badge.rarity}
-              </span>
-            </div>
-          ))}
+              Belt View
+            </button>
+            <button
+              type="button"
+              onClick={() => setProgressView('radar')}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                progressView === 'radar' ? 'bg-cyan-500/20 text-cyan-200' : 'text-slate-300'
+              }`}
+            >
+              Skill Radar
+            </button>
+          </div>
         </div>
-      </motion.section>
+      </section>
+
+      <section className="grid gap-5 lg:grid-cols-[minmax(0,30%)_minmax(0,70%)]">
+        <article className="rounded-2xl border border-white/10 bg-[#050811] p-4">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-300">Your Progress</h2>
+
+          {progressView === 'belt' ? (
+            <div className="mt-3 space-y-3">
+              <div className="h-[230px] overflow-hidden rounded-xl border border-white/10 bg-black/30">
+                <BeltAvatarWidget ki={kiTotal} className="h-full" />
+              </div>
+              <div>
+                <p className="text-xl font-bold text-white">{rank.current.colorName}</p>
+                <p className="text-sm text-slate-400">{rank.current.rankName}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-400">Ki progress</p>
+                <p className="text-sm font-semibold text-amber-300">1,234 / 1,500 Ki</p>
+                <div className="mt-1 h-2 overflow-hidden rounded-full bg-slate-800">
+                  <div className="h-full w-[82%] rounded-full bg-gradient-to-r from-amber-400 to-red-400" />
+                </div>
+              </div>
+              <p className="text-xs text-slate-400">Estimated 4 days to next rank at current pace.</p>
+            </div>
+          ) : (
+            <div className="mt-3 rounded-xl border border-cyan-400/20 bg-black/30 p-2">
+              <SkillRadarChart
+                axes={radarAxes}
+                className="mx-auto h-[250px] w-[250px]"
+                onAxisClick={(axis) => {
+                  if (axis.href) window.location.href = axis.href
+                }}
+              />
+            </div>
+          )}
+        </article>
+
+        <article className="rounded-2xl border border-white/10 bg-[#050811] p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-300">Choose Your School</h2>
+            <Link href="/app/explore" className="text-xs font-semibold text-cyan-300 transition-colors hover:text-cyan-200">
+              View All Schools
+            </Link>
+          </div>
+
+          <div className="flex gap-3 overflow-x-auto pb-1">
+            {schoolStats.map(({ school, commandCount, difficulty }) => (
+              <Link
+                key={school.id}
+                href={school.route}
+                className="group min-w-[250px] rounded-xl border border-white/10 bg-black/30 p-3 transition-colors hover:border-cyan-300/35"
+              >
+                <div
+                  className="h-24 rounded-lg"
+                  style={{
+                    background: `radial-gradient(circle at 20% 30%, ${school.palette.glow}, transparent 55%), #04050a`,
+                    border: `1px solid ${school.palette.primary}40`,
+                  }}
+                />
+                <p className="mt-2 text-sm font-semibold text-white">
+                  {school.schoolName}
+                </p>
+                <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
+                  <span>{commandCount} commands</span>
+                  <span>{difficulty}</span>
+                </div>
+                <p className="mt-2 line-clamp-2 text-xs text-slate-400 transition-colors group-hover:text-slate-200">
+                  {school.philosophy}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </article>
+      </section>
+
+      <section className="grid gap-5 lg:grid-cols-[minmax(0,30%)_minmax(0,70%)]">
+        <article className="rounded-2xl border border-white/10 bg-[#050811] p-4">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-300">Today&apos;s Trial</h2>
+          <div className="mt-3 rounded-xl border border-red-400/25 bg-red-500/8 p-3">
+            <p className="text-base font-semibold text-white">{todayTrial.title}</p>
+            <div className="mt-1 text-xs text-amber-300">{todayTrial.difficulty} · {'★'.repeat(todayTrial.difficulty === 'advanced' ? 3 : todayTrial.difficulty === 'intermediate' ? 2 : 1)}</div>
+            <p className="mt-2 text-sm text-slate-300">{todayTrial.description}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link href={`/app/challenge/${todayTrial.id}`} className="inline-flex items-center gap-1 rounded-lg bg-red-500 px-3 py-2 text-xs font-semibold text-white">
+                <Swords className="h-3.5 w-3.5" /> Start Challenge
+              </Link>
+              <Link href="/app/challenges" className="inline-flex items-center gap-1 rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-slate-200">
+                <Telescope className="h-3.5 w-3.5" /> View All Challenges
+              </Link>
+            </div>
+          </div>
+        </article>
+
+        <article className="rounded-2xl border border-white/10 bg-[#050811] p-4">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-300">Recent Activity</h2>
+          <div className="mt-3 max-h-[300px] space-y-2 overflow-y-auto pr-1">
+            {timeline.map((entry) => (
+              <div key={entry.id} className="flex items-start gap-3 rounded-xl border border-white/10 bg-black/30 px-3 py-2.5">
+                <span className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-slate-900">
+                  {itemIcon(entry.type)}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-slate-100">{entry.title}</p>
+                  <p className="text-xs text-slate-400">{entry.detail}</p>
+                </div>
+                <span className="inline-flex items-center gap-1 text-[11px] text-slate-500">
+                  <Clock3 className="h-3.5 w-3.5" /> {entry.time}
+                </span>
+              </div>
+            ))}
+          </div>
+        </article>
+      </section>
+
+      <section className="rounded-2xl border border-cyan-400/20 bg-cyan-400/8 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-cyan-200">Secondary Dashboard View: Skill Radar</p>
+            <p className="text-xs text-cyan-100/80">Click any axis to open that school&apos;s learning path.</p>
+          </div>
+          <Link href="/app/paths/the-way-of-linux" className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-200 hover:text-cyan-100">
+            Open Learning Path <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-white/10 bg-[#050811] p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-300">Responsive Layout Notes</h2>
+        <div className="mt-2 grid gap-2 text-xs text-slate-300 sm:grid-cols-3">
+          <div className="rounded-lg border border-white/10 bg-black/25 p-2">Desktop: full sidebar, 30/70 split, full 3D widgets.</div>
+          <div className="rounded-lg border border-white/10 bg-black/25 p-2">Tablet: icon sidebar, two-column cards, horizontal school row.</div>
+          <div className="rounded-lg border border-white/10 bg-black/25 p-2">Mobile: stacked cards, swipe school cards, simplified progress visuals.</div>
+        </div>
+      </section>
+
+      <section className="sr-only" aria-label="Accessibility notes">
+        <ul>
+          <li>
+            <CheckCircle2 className="h-4 w-4" />
+          </li>
+        </ul>
+      </section>
     </motion.div>
   )
 }

@@ -1,73 +1,17 @@
 'use client'
 
-import { notFound } from 'next/navigation'
-import { use } from 'react'
-import { motion } from 'framer-motion'
+import { use, useMemo, useState } from 'react'
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { ArrowLeft, Copy, Shield, AlertTriangle, BookOpen, Terminal } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Bookmark, Copy, ShieldAlert, Star } from 'lucide-react'
+import { commandItems } from '@/lib/mock-data'
+import { ryuhaSchools } from '@/lib/constants/ryuha-schools'
 
-const allCommands: Record<string, {
-  name: string; category: string; categoryIcon: string; difficulty: string; dangerLevel: string
-  description: string; syntax: string
-  flags: { flag: string; description: string }[]
-  examples: { command: string; description: string; output?: string }[]
-  related: string[]
-}> = {
-  grep: {
-    name: 'grep', category: 'Linux Core', categoryIcon: '🐧', difficulty: 'beginner', dangerLevel: 'safe',
-    description: 'Search for patterns in files using regular expressions. One of the most frequently used commands in the Unix toolbox.',
-    syntax: 'grep [OPTIONS] PATTERN [FILE...]',
-    flags: [
-      { flag: '-r, --recursive', description: 'Search recursively through directories' },
-      { flag: '-i, --ignore-case', description: 'Case-insensitive pattern matching' },
-      { flag: '-n, --line-number', description: 'Prefix each line with its line number' },
-      { flag: '-l, --files-with-matches', description: 'Show only filenames containing matches' },
-      { flag: '-c, --count', description: 'Print only a count of matching lines per file' },
-      { flag: '-v, --invert-match', description: 'Select lines that do NOT match the pattern' },
-    ],
-    examples: [
-      { command: "grep -rn 'TODO' --include='*.ts' src/", description: 'Find all TODO comments in TypeScript files', output: 'src/app/page.tsx:34:// TODO: add validation\nsrc/lib/utils.ts:12:// TODO: optimize' },
-      { command: "grep -i 'error' /var/log/syslog | head -20", description: 'Search for errors in system log (case-insensitive, first 20 lines)' },
-      { command: "grep -rl 'deprecated' --include='*.md' docs/", description: 'Find all markdown docs mentioning deprecated features' },
-      { command: "grep -c 'import' src/**/*.ts | sort -t: -k2 -rn | head -5", description: 'Top 5 files by import count' },
-    ],
-    related: ['sed', 'awk', 'find', 'ripgrep'],
-  },
-  find: {
-    name: 'find', category: 'Linux Core', categoryIcon: '🐧', difficulty: 'beginner', dangerLevel: 'safe',
-    description: 'Search for files and directories in the filesystem based on name, size, time, permissions, and more.',
-    syntax: 'find [PATH] [EXPRESSION]',
-    flags: [
-      { flag: '-name PATTERN', description: 'Search by filename (case-sensitive glob)' },
-      { flag: '-type [f|d|l]', description: 'Filter by type: f=file, d=directory, l=symlink' },
-      { flag: '-size [+|-]N[c|k|M|G]', description: 'Filter by file size' },
-      { flag: '-mtime [+|-]N', description: 'Filter by modification time (days)' },
-      { flag: '-exec CMD {} \\;', description: 'Execute a command on each match' },
-      { flag: '-maxdepth N', description: 'Limit directory traversal depth' },
-    ],
-    examples: [
-      { command: "find . -name '*.log' -size +10M", description: 'Find log files larger than 10MB', output: './logs/nginx/error.log\n./logs/app/worker.log' },
-      { command: 'find /tmp -type f -mtime +7 -delete', description: 'Delete temp files older than 7 days (caution!)' },
-      { command: "find src -name '*.test.ts' -exec wc -l {} +", description: 'Count lines in all test files' },
-    ],
-    related: ['locate', 'fd', 'grep', 'xargs'],
-  },
-}
-
-// Fallback for commands not in the detailed list
-const fallback = (slug: string) => ({
-  name: slug.replace(/-/g, ' '), category: 'CLI', categoryIcon: '💻', difficulty: 'intermediate', dangerLevel: 'safe',
-  description: `Learn how to use the ${slug.replace(/-/g, ' ')} command effectively.`,
-  syntax: `${slug.replace(/-/g, ' ')} [OPTIONS] ARGUMENTS`,
-  flags: [
-    { flag: '--help', description: 'Show usage information' },
-    { flag: '--version', description: 'Show version number' },
-  ],
-  examples: [
-    { command: `${slug.replace(/-/g, ' ')} --help`, description: 'Display available options and usage' },
-  ],
-  related: [],
-})
+const TerminalEmulator = dynamic(
+  () => import('@/components/terminal/terminal-emulator').then((module) => module.TerminalEmulator),
+  { ssr: false },
+)
 
 interface CommandDetailPageProps {
   params: Promise<{ slug: string }>
@@ -75,134 +19,145 @@ interface CommandDetailPageProps {
 
 export default function CommandDetailPage({ params }: CommandDetailPageProps) {
   const { slug } = use(params)
-  const command = allCommands[slug] ?? fallback(slug)
+  const command = commandItems.find((item) => item.slug === slug) ?? commandItems[0]
+  const [notes, setNotes] = useState('')
 
-  if (!command) notFound()
+  const school = useMemo(() => {
+    return ryuhaSchools.find((entry) => entry.tools.some((tool) => command.name.toLowerCase().includes(tool.toLowerCase().split(' ')[0])))
+  }, [command.name])
 
-  const dangerColor = command.dangerLevel === 'safe' ? 'text-emerald-400' : command.dangerLevel === 'caution' ? 'text-amber-400' : 'text-red-400'
-  const dangerBg = command.dangerLevel === 'safe' ? 'bg-emerald-500/10 border-emerald-500/20' : command.dangerLevel === 'caution' ? 'bg-amber-500/10 border-amber-500/20' : 'bg-red-500/10 border-red-500/20'
+  const dangerScore = command.dangerLevel === 'dangerous' ? 5 : command.dangerLevel === 'caution' ? 3 : 1
 
   return (
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="space-y-6">
-      {/* Breadcrumb */}
-      <Link href="/explore" className="inline-flex items-center gap-1.5 text-sm text-foreground-muted hover:text-foreground transition-colors">
-        <ArrowLeft className="h-4 w-4" /> Back to Explore
-      </Link>
-
-      {/* Header */}
-      <section className="relative overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-background-secondary/80 to-background-tertiary/30 p-6 md:p-8">
-        <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-primary/5 blur-3xl" />
-        <div className="relative">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-2xl">{command.categoryIcon}</span>
-            <span className="text-xs uppercase tracking-widest text-foreground-subtle">{command.category}</span>
-            <span className={`badge-${command.difficulty} rounded-full px-2.5 py-0.5 text-xs font-medium`}>{command.difficulty}</span>
-            <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium ${dangerBg} ${dangerColor}`}>
-              {command.dangerLevel === 'safe' ? <Shield className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
-              {command.dangerLevel}
-            </span>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.35 }} className="space-y-5">
+      <section className="rounded-2xl border border-white/10 bg-[#06080f] p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs uppercase tracking-[0.14em] text-slate-400">{school?.kanji ?? 'General'} · {school?.englishName ?? 'General School'}</p>
+            <h1 className="mt-1 font-mono text-4xl font-black text-white">$ {command.name}</h1>
+            <p className="text-xs text-slate-400">School label: {school?.schoolName ?? 'General Technique'}</p>
           </div>
-          <h1 className="mt-3 font-mono text-4xl font-black tracking-tight">$ {command.name}</h1>
-          <p className="mt-2 max-w-2xl text-foreground-muted">{command.description}</p>
-        </div>
-      </section>
-
-      {/* Syntax */}
-      <section className="glass-card p-5">
-        <h2 className="flex items-center gap-2 text-lg font-bold">
-          <Terminal className="h-5 w-5 text-primary" /> Syntax
-        </h2>
-        <div className="mt-3 relative group">
-          <pre className="rounded-xl border border-border bg-terminal-bg px-5 py-4 font-mono text-sm text-terminal-text overflow-x-auto">
-            {command.syntax}
-          </pre>
-          <button className="absolute right-3 top-3 rounded-lg border border-border bg-background-secondary p-1.5 text-foreground-subtle opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground">
-            <Copy className="h-3.5 w-3.5" />
+          <button className="inline-flex items-center gap-1 rounded-lg border border-amber-300/35 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-200">
+            <Bookmark className="h-3.5 w-3.5" /> Bookmark
           </button>
         </div>
       </section>
 
-      {/* Flags */}
-      <section className="glass-card p-5">
-        <h2 className="flex items-center gap-2 text-lg font-bold">
-          <BookOpen className="h-5 w-5 text-primary" /> Flags & Options
-        </h2>
-        <div className="mt-4 space-y-0 divide-y divide-border">
-          {command.flags.map((f) => (
-            <div key={f.flag} className="flex items-start gap-4 py-3">
-              <code className="shrink-0 rounded-md bg-background-tertiary px-2.5 py-1 font-mono text-sm text-primary">{f.flag}</code>
-              <p className="text-sm text-foreground-muted pt-0.5">{f.description}</p>
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="space-y-4">
+          <article className="rounded-xl border border-white/10 bg-[#050811] p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-300">1. Quick Description</h2>
+            <p className="mt-2 text-sm text-slate-200">{command.description}</p>
+          </article>
+
+          <article className="rounded-xl border border-white/10 bg-[#050811] p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-300">2. Syntax Template</h2>
+            <div className="group relative mt-2 rounded-lg border border-cyan-400/20 bg-black/35 p-3 font-mono text-sm text-cyan-200">
+              {command.name} [OPTIONS] [ARGS]
+              <button className="absolute right-2 top-2 rounded border border-white/15 p-1 text-slate-300"><Copy className="h-3.5 w-3.5" /></button>
             </div>
-          ))}
-        </div>
-      </section>
+          </article>
 
-      {/* Examples */}
-      <section className="glass-card p-5">
-        <h2 className="text-lg font-bold">Examples</h2>
-        <div className="mt-4 space-y-4">
-          {command.examples.map((ex, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + i * 0.1 }}
-              className="group relative rounded-xl border border-border bg-terminal-bg overflow-hidden"
-            >
-              <div className="px-4 py-3">
-                <p className="font-mono text-sm text-terminal-prompt">$ {ex.command}</p>
-                {ex.output && (
-                  <pre className="mt-2 text-sm text-zinc-400 whitespace-pre-wrap">{ex.output}</pre>
-                )}
-              </div>
-              <div className="border-t border-border bg-background-secondary/30 px-4 py-2">
-                <p className="text-xs text-foreground-muted">{ex.description}</p>
-              </div>
-              <button className="absolute right-3 top-3 rounded-lg border border-border bg-background-secondary p-1.5 text-foreground-subtle opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground">
-                <Copy className="h-3.5 w-3.5" />
-              </button>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+          <article className="rounded-xl border border-white/10 bg-[#050811] p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-300">3. Sensei Says</h2>
+            <p className="mt-2 text-sm text-slate-300">Think of <span className="font-mono text-cyan-200">{command.name}</span> like a focused search pattern in a dojo archive: you scan fast, filter precisely, and avoid noisy output.</p>
+          </article>
 
-      {/* Try It */}
-      <section className="glass-card p-5">
-        <h2 className="text-lg font-bold">Try It Yourself</h2>
-        <div className="mt-3 terminal-shell min-h-[200px]">
-          <div className="flex items-center justify-between border-b border-white/5 px-4 py-2">
-            <span className="font-mono text-xs text-zinc-500">sandbox — interactive</span>
-            <button className="rounded border border-zinc-700 px-2 py-1 text-xs text-zinc-400 hover:text-zinc-300 transition-colors">Reset</button>
-          </div>
-          <div className="px-5 py-4 font-mono text-sm text-terminal-text">
-            <p>
-              <span className="text-terminal-prompt">learner@dojo</span>
-              <span className="text-zinc-500">:</span>
-              <span className="text-blue-400">~</span>
-              <span className="text-zinc-500">$ </span>
-              <span className="terminal-cursor">▋</span>
-            </p>
-          </div>
-        </div>
-      </section>
+          <article className="rounded-xl border border-white/10 bg-[#050811] p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-300">4. Flags & Options</h2>
+            <div className="mt-2 overflow-x-auto">
+              <table className="w-full min-w-[500px] text-sm">
+                <thead>
+                  <tr className="text-left text-slate-400">
+                    <th className="pb-2 pr-3">Flag</th>
+                    <th className="pb-2">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {command.flags.map((flag) => (
+                    <tr key={flag.flag} className="border-t border-white/10 text-slate-200">
+                      <td className="py-2 pr-3 font-mono text-cyan-200">{flag.flag}</td>
+                      <td className="py-2">{flag.description}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </article>
 
-      {/* Related commands */}
-      {command.related.length > 0 && (
-        <section className="glass-card p-5">
-          <h2 className="text-lg font-bold">Related Commands</h2>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {command.related.map((r) => (
-              <Link
-                key={r}
-                href={`/command/${r}`}
-                className="rounded-lg border border-border bg-background-secondary/50 px-3 py-1.5 font-mono text-sm transition-all hover:border-primary/30 hover:text-primary"
-              >
-                $ {r}
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
+          <article className="rounded-xl border border-white/10 bg-[#050811] p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-300">5. Practical Examples</h2>
+            <div className="mt-2 space-y-2">
+              {command.examples.slice(0, 5).map((example) => (
+                <div key={example.command} className="rounded-lg border border-white/10 bg-black/25 p-3">
+                  <p className="font-mono text-sm text-cyan-200">$ {example.command}</p>
+                  <p className="mt-1 text-xs text-slate-300">{example.description}</p>
+                  {example.output && <pre className="mt-1 whitespace-pre-wrap text-xs text-slate-400">{example.output}</pre>}
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="rounded-xl border border-white/10 bg-[#050811] p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-300">6. Common Mistakes</h2>
+            <ul className="mt-2 space-y-1 text-sm text-slate-300">
+              <li>• Running destructive flags without preview mode.</li>
+              <li>• Forgetting quotation marks around wildcard patterns.</li>
+              <li>• Combining recursive scans with root paths unintentionally.</li>
+            </ul>
+          </article>
+
+          <article className="rounded-xl border border-white/10 bg-[#050811] p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-300">7. Related Commands</h2>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {['find', 'awk', 'sed', 'xargs'].map((related) => (
+                <Link key={related} href={`/app/command/${related}`} className="rounded-lg border border-white/15 bg-black/25 px-2.5 py-1 text-xs text-slate-200">
+                  {related}
+                </Link>
+              ))}
+            </div>
+          </article>
+
+          <article className="rounded-xl border border-white/10 bg-[#050811] p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-300">8. Difficulty & Danger Rating</h2>
+            <div className="mt-2 flex items-center gap-3 text-sm">
+              <span className="rounded-full border border-violet-400/35 bg-violet-500/10 px-2 py-1 text-violet-200">{command.difficulty}</span>
+              <span className="inline-flex items-center gap-1 rounded-full border border-red-400/30 bg-red-500/10 px-2 py-1 text-red-200">
+                <ShieldAlert className="h-3.5 w-3.5" /> Danger {dangerScore}/5
+              </span>
+            </div>
+          </article>
+
+          <article className="rounded-xl border border-white/10 bg-[#050811] p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-300">9. Inline Terminal</h2>
+            <div className="mt-2 overflow-hidden rounded-xl border border-red-500/20">
+              <TerminalEmulator className="h-[330px] cyber-terminal-surface" sessionId={`command-${slug}`} />
+            </div>
+          </article>
+
+          <article className="rounded-xl border border-white/10 bg-[#050811] p-4">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-slate-300">10. Your Notes</h2>
+            <textarea
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              rows={5}
+              placeholder="Save personal notes for this command..."
+              className="mt-2 w-full rounded-lg border border-white/15 bg-black/30 p-3 text-sm text-slate-200 outline-none ring-cyan-300/25 placeholder:text-slate-500 focus:ring-2"
+            />
+          </article>
+        </div>
+
+        <aside className="space-y-3">
+          <article className="rounded-xl border border-amber-400/25 bg-amber-500/10 p-4">
+            <h3 className="text-sm font-semibold text-amber-100">11. Bookmark + Mastery</h3>
+            <p className="mt-1 text-xs text-amber-100/85">Pin this command and revisit until your execution is fast and safe.</p>
+            <div className="mt-2 inline-flex items-center gap-1 text-xs text-amber-100"><Star className="h-3.5 w-3.5" /> Mastery progress 54%</div>
+          </article>
+          <article className="rounded-xl border border-white/10 bg-[#050811] p-4 text-xs text-slate-300">
+            SEO meta and route-based metadata should be defined in parent layout metadata exports for this dynamic route.
+          </article>
+        </aside>
+      </section>
     </motion.div>
   )
 }

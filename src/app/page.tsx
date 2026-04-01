@@ -179,7 +179,7 @@ export default function LandingPage() {
           </nav>
 
           <Link
-            href="/dashboard"
+            href="/app/dashboard"
             className="inline-flex items-center gap-2 rounded-md border border-[#f4b2a4]/40 bg-[#f4b2a4] px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#111318] transition-colors hover:bg-[#ffd0c6]"
           >
             Enter
@@ -221,14 +221,14 @@ export default function LandingPage() {
 
               <div className="mt-9 flex flex-wrap gap-3">
                 <Link
-                  href="/dashboard"
+                  href="/app/dashboard"
                   className="inline-flex items-center gap-2 rounded-md bg-[#ff5b3d] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-[#121317] transition-all hover:-translate-y-1 hover:scale-[1.02] hover:bg-[#ff755b]"
                 >
                   Enter Dojo
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
-                  href="/playground"
+                  href="/app/playground"
                   className="inline-flex items-center gap-2 rounded-md border border-white/20 bg-white/5 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-[#d4d8de] transition-all hover:-translate-y-1 hover:scale-[1.02] hover:bg-white/10"
                 >
                   <Play className="h-4 w-4" />
@@ -403,14 +403,14 @@ export default function LandingPage() {
 
                 <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
                   <Link
-                    href="/dashboard"
+                    href="/app/dashboard"
                     className="inline-flex items-center gap-2 rounded-md bg-[#f4b2a4] px-5 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-[#111318] transition-all hover:-translate-y-0.5 hover:bg-[#ffd0c6]"
                   >
                     Enter Dojo
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <Link
-                    href="/explore"
+                    href="/app/explore"
                     className="inline-flex items-center gap-2 rounded-md border border-white/20 bg-white/5 px-5 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-[#d4d8de] transition-all hover:-translate-y-0.5 hover:bg-white/10"
                   >
                     <Terminal className="h-4 w-4" />

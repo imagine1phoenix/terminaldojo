@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Syne, Space_Grotesk } from 'next/font/google'
@@ -37,8 +37,9 @@ const badgeItems = [
   { icon: Gauge, label: '0.12ms', delay: 0.5, top: '35%', left: '64%' },
 ]
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -62,7 +63,8 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/dashboard')
+    const registered = searchParams.get('registered') === 'true'
+    router.push(registered ? '/app/onboarding' : '/app/dashboard')
     router.refresh()
   }
 
@@ -248,7 +250,7 @@ export default function LoginPage() {
                   <Command className="h-3.5 w-3.5" />
                   Back to Landing
                 </Link>
-                <Link href="/register" className="inline-flex items-center gap-1.5 transition-colors hover:text-[#f4b2a4]">
+                <Link href="/app/register" className="inline-flex items-center gap-1.5 transition-colors hover:text-[#f4b2a4]">
                   Create Account
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
@@ -271,5 +273,19 @@ export default function LoginPage() {
         Trusted auth pipeline
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full max-w-6xl rounded-2xl border border-white/15 bg-[#090b11] p-8 text-sm text-[#a4a8b1]">
+          Loading secure session portal...
+        </div>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   )
 }

@@ -251,6 +251,28 @@ body {
   box-shadow: var(--shadow-lg);
 }
 
+.ryuha-card {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.12), transparent 35%),
+    linear-gradient(165deg, rgba(12, 12, 18, 0.92), rgba(17, 17, 24, 0.74));
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 240ms cubic-bezier(0.22, 1, 0.36, 1), border-color 180ms ease;
+}
+
+.ryuha-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 24%, rgba(0, 0, 0, 0.15));
+  pointer-events: none;
+}
+
+.dojo-kanji {
+  font-family: var(--font-noto-serif-jp), var(--font-inter), serif;
+  letter-spacing: 0.01em;
+}
+
 /* ========================================
    TERMINAL STYLES
    ======================================== */
@@ -270,6 +292,127 @@ body {
   display: inline-block;
   color: var(--terminal-cursor);
   animation: terminalBlink 1s step-end infinite;
+}
+
+.neon-red-frame {
+  position: relative;
+  isolation: isolate;
+}
+
+.neon-red-frame::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(140deg, rgba(255, 23, 68, 0.4), rgba(255, 23, 68, 0.05) 45%, rgba(0, 204, 255, 0.2));
+  z-index: -1;
+  filter: blur(12px);
+  opacity: 0.8;
+}
+
+.dojo-window-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 0.375rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #93c5fd;
+  background: rgba(0, 0, 0, 0.35);
+  transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+
+.dojo-window-btn:hover {
+  border-color: rgba(0, 204, 255, 0.5);
+  color: #67e8f9;
+  background: rgba(6, 182, 212, 0.15);
+}
+
+.dojo-window-btn-danger:hover {
+  border-color: rgba(248, 113, 113, 0.55);
+  color: #fda4af;
+  background: rgba(239, 68, 68, 0.22);
+}
+
+.cyber-terminal-surface {
+  background:
+    radial-gradient(circle at 20% -10%, rgba(255, 23, 68, 0.12), transparent 45%),
+    radial-gradient(circle at 80% -15%, rgba(0, 204, 255, 0.1), transparent 40%),
+    #020307;
+}
+
+.cyber-loading-shell {
+  background:
+    radial-gradient(circle at 50% 10%, rgba(0, 204, 255, 0.12), transparent 40%),
+    radial-gradient(circle at 20% 90%, rgba(255, 23, 68, 0.16), transparent 45%),
+    #020307;
+}
+
+.cyber-scanlines {
+  position: relative;
+}
+
+.cyber-scanlines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.035) 0,
+    rgba(255, 255, 255, 0.035) 1px,
+    transparent 2px,
+    transparent 4px
+  );
+  opacity: 0.34;
+  mix-blend-mode: screen;
+}
+
+.sensei-cursor {
+  display: inline-block;
+  margin-left: 2px;
+  color: #67e8f9;
+  animation: terminalBlink 0.85s step-end infinite;
+}
+
+.enso-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #22d3ee;
+  animation: spin-slow 1s linear infinite;
+}
+
+.onboarding-brush-frame {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+    0 26px 60px rgba(0, 0, 0, 0.55),
+    0 0 40px rgba(0, 204, 255, 0.08);
+}
+
+.onboarding-brush-frame::before,
+.onboarding-brush-frame::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+}
+
+.onboarding-brush-frame::before {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(#080b13, #080b13) padding-box,
+    linear-gradient(135deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.06) 40%, rgba(0, 204, 255, 0.28)) border-box;
+}
+
+.onboarding-brush-frame::after {
+  background: radial-gradient(circle at 10% 12%, rgba(255, 255, 255, 0.13), transparent 36%);
 }
 
 /* ========================================

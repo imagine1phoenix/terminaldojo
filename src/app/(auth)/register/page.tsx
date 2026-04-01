@@ -46,7 +46,7 @@ export default function RegisterPage() {
         return
       }
 
-      router.push('/login?registered=true')
+      router.push('/app/login?registered=true')
     } catch {
       setError('Something went wrong')
       setLoading(false)
@@ -142,7 +142,7 @@ export default function RegisterPage() {
 
         <p className="mt-6 text-center text-sm text-foreground-muted">
           Already have an account?{' '}
-          <Link href="/login" className="font-semibold text-primary hover:underline">
+          <Link href="/app/login" className="font-semibold text-primary hover:underline">
             Sign in
           </Link>
         </p>
